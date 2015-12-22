@@ -18,29 +18,23 @@ var rffoot = "174 5916"
 
 // Convert a decimal representation of signal to pilight raw -----------
 func decimalToRaw(n int) string {
-	var bin []string
-	var rfcode string
+	bin := make([]string, 0, 25)
 	for n > 0 {
 		if n%2 == 0 {
-			rfcode = rf0
+			bin = append(bin, rf0)
 		} else {
-			rfcode = rf1
+			bin = append(bin, rf1)
 		}
-		bin = append(bin, rfcode)
 		n = n / 2
 	}
-
 	for len(bin) < 24 {
 		bin = append(bin, rf0)
 	}
-
-	binLen := len(bin)
-	var binFinal = make([]string, binLen+1, binLen+1)
-	for i := 0; i < binLen; i++ {
-		binFinal[i] = bin[binLen-i-1]
+	for i := 0; i < 12; i++ {
+		bin[i], bin[23-i] = bin[23-i], bin[i]
 	}
-	binFinal = append(binFinal, rffoot)
-	return strings.Join(binFinal, " ")
+	bin = append(bin, rffoot)
+	return strings.Join(bin, " ")
 }
 
 // SendCode executes the External "pilight-send" command given an rf code

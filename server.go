@@ -21,7 +21,7 @@ var switches = []rf.Switch{
 
 func main() {
 	port := flag.String("port", "8080", "The port to run the server on")
-	flag.Parsed()
+	flag.Parse()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/switch", switchHandler)
 	http.ListenAndServe(":"+*port, mux)
