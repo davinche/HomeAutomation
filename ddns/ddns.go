@@ -71,9 +71,9 @@ func NewUpdater(email, apikey, domain, record string) *DNSUpdater {
 
 // Update continuously updates the dns record
 func (d *DNSUpdater) Update() {
-	// default to 5 minutes
+	// default to 24 hours
 	if d.tick == 0 {
-		d.tick = 5 * time.Minute
+		d.tick = 24 * time.Hour
 	}
 	ticker := time.NewTicker(d.tick)
 

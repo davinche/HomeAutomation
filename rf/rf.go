@@ -43,7 +43,7 @@ func decimalToRaw(n int) string {
 // SendCode executes the External "pilight-send" command given an rf code
 func SendCode(code int) error {
 	binCode := decimalToRaw(code)
-	pilightArgs := []string{"-p", "raw", "-c", binCode}
+	pilightArgs := []string{"-S", "127.0.0.1", "-P", "5000", "-p", "raw", "-c", binCode}
 	cmd := exec.Command("pilight-send", pilightArgs...)
 	return cmd.Run()
 }

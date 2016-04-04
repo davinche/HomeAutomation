@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/kardianos/osext"
 	"homeautomation/ddns"
+	"homeautomation/encrypt"
 	"homeautomation/rf"
 	"log"
 	"net/http"
@@ -18,12 +18,14 @@ type config struct {
 		APIKey string `json:"apiKey"`
 		Record string `json:"record"`
 	} `json:"cloudflare"`
+	LetsEncrypt struct {
+		API string
+	} `json:"letsencrypt"`
 }
 
 func getConfig() *config {
 	c := config{}
-	dir, _ := osext.ExecutableFolder()
-	configFile, err := os.Open(dir + "/config.json")
+	configFile, err := os.Open("config.json")
 	if err != nil {
 		log.Fatalf("error: could not read config file: %q\n", err)
 	}
@@ -52,10 +54,30 @@ func main() {
 		config.Cloudflare.Record,
 	).Update()
 
+	domain := config.Cloudflare.Record + "." + config.Cloudflare.Domain
+	err := encrypt.
+		NewDomain(domain).Bootstrap(config.LetsEncrypt.API)
+
+	if err != nil {
+		log.Println(err)
+	}
+
 	// API Handlers
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/switch", rf.SwitchHandler)
 
 	// HTTP Server
-	http.ListenAndServe(":"+*port, mux)
+	go func() {
+		log.Fatal(http.ListenAndServe(":"+*port, mux))
+	}()
+
+	// HTTPS (Alexa)
+	log.Fatal(http.ListenAndServeTLS(":10443",
+		domain+".crt",
+		domain+".key",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(200)
+			w.Write([]byte("hello"))
+		}),
+	))
 }
