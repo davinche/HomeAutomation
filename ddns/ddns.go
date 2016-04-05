@@ -97,6 +97,7 @@ func (d *DNSUpdater) SetTTL(t time.Duration) {
 func (d *DNSUpdater) updateRecord() {
 	// Make sure we have our record id before doing anything
 	if d.RecordID == "" {
+		log.Println("action: getting record ID")
 		if err := d.updateRecordID(); err != nil {
 			log.Printf("error getting record id: %q\n", err)
 			return
@@ -104,6 +105,7 @@ func (d *DNSUpdater) updateRecord() {
 	}
 
 	// Grab our external IP
+	log.Println("action: getting external IP")
 	ip, err := getExternalIP()
 	if err != nil {
 		log.Printf("error: could not get external ip: %q\n", err)
@@ -121,6 +123,7 @@ func (d *DNSUpdater) updateRecord() {
 
 	buf := bytes.Buffer{}
 	encoder := json.NewEncoder(&buf)
+	log.Println("action: encoding cloudflare PUT payload")
 	err = encoder.Encode(&payload)
 	if err != nil {
 		log.Printf("error: could not encode cloudflare update payload: %q\n", err)
@@ -129,6 +132,7 @@ func (d *DNSUpdater) updateRecord() {
 
 	// Create the http request
 	updateRecordURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", cloudflareAPI, d.ZoneID, d.RecordID)
+	log.Println("action: requesting record update via cloudflare API")
 	request, err := http.NewRequest("PUT", updateRecordURL, &buf)
 	if err != nil {
 		log.Printf("error: could not create new request for updating the dns record: %q\n", err)
@@ -146,7 +150,7 @@ func (d *DNSUpdater) updateRecord() {
 
 	// Check to see if we got a success
 	if resp.StatusCode == http.StatusOK {
-		log.Printf("updated success: record %q, ip %q\n", d.Record+"."+d.Domain, ip)
+		log.Printf("update success: record %q, ip %q\n", d.Record+"."+d.Domain, ip)
 		return
 	}
 

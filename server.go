@@ -47,6 +47,7 @@ func main() {
 	config := getConfig()
 
 	// DDNS
+	log.Println("STARTING: DDNS Updater")
 	go ddns.NewUpdater(
 		config.Cloudflare.Email,
 		config.Cloudflare.APIKey,
@@ -54,27 +55,35 @@ func main() {
 		config.Cloudflare.Record,
 	).Update()
 
-	domain := config.Cloudflare.Record + "." + config.Cloudflare.Domain
-	err := encrypt.
-		NewDomain(domain).Bootstrap(config.LetsEncrypt.API)
+	// Bootstrap the domain
+	domainStr := config.Cloudflare.Record + "." + config.Cloudflare.Domain
+	domain := encrypt.NewDomain(domainStr, config.LetsEncrypt.API)
+	log.Println("STARTING: Let's Encrypt Bootstrap")
+	err := domain.Bootstrap()
 
 	if err != nil {
 		log.Println(err)
 	}
+
+	// Go Renew in 30 days
+	log.Println("STARTING: Let's Encrypt 30 Day Refresh")
+	go domain.RefreshCertificate()
 
 	// API Handlers
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/switch", rf.SwitchHandler)
 
 	// HTTP Server
+	log.Println("STARTING: Raspberry PI Homeautomation API Server")
 	go func() {
 		log.Fatal(http.ListenAndServe(":"+*port, mux))
 	}()
 
 	// HTTPS (Alexa)
-	log.Fatal(http.ListenAndServeTLS(":10443",
-		domain+".crt",
-		domain+".key",
+	log.Println("STARTING: Alexa Handler")
+	log.Fatal(http.ListenAndServeTLS(":31415",
+		domainStr+".crt",
+		domainStr+".key",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
 			w.Write([]byte("hello"))
