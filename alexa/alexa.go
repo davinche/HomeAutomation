@@ -1,7 +1,6 @@
 package alexa
 
 import (
-	"fmt"
 	"homeautomation/apihelpers"
 	"homeautomation/rf"
 	"log"
@@ -32,7 +31,7 @@ func handleSwitches(w http.ResponseWriter, r *http.Request, b *glexa.Body) {
 	response.Response.ShouldEndSession = true
 
 	if b.Request.IsLaunch() {
-		response.Tell("I did not understand your command. Please try again.")
+		response.Tell("I did not understand what you were asking. Please try again.")
 		apihelpers.EncodeJSON(w, http.StatusOK, response)
 		return
 	}
@@ -44,14 +43,12 @@ func handleSwitches(w http.ResponseWriter, r *http.Request, b *glexa.Body) {
 
 	switchNum, err := strconv.Atoi(b.Request.Intent.Slots["switch"].Value)
 	if err != nil {
-		response.Tell("An error occured while analysing the command. Please try again.")
+		response.Tell("An error has occurred. Please try again.")
 		apihelpers.EncodeJSON(w, http.StatusOK, response)
 		return
 	}
 	switchStatus := strings.ToLower(b.Request.Intent.Slots["state"].Value)
-	response.Tell(
-		fmt.Sprintf("Turning switch %d %s", switchNum, switchStatus),
-	)
+	response.Tell("Okay")
 	apihelpers.EncodeJSON(w, http.StatusOK, response)
 
 	// Log any errors if they occur
