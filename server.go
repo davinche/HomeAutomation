@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"homeautomation/alexa"
 	"homeautomation/ddns"
 	"homeautomation/encrypt"
 	"homeautomation/rf"
@@ -79,14 +80,16 @@ func main() {
 		log.Fatal(http.ListenAndServe(":"+*port, mux))
 	}()
 
-	// HTTPS (Alexa)
+	// HTTPS
+	smux := http.NewServeMux()
+
+	// Alexa!
+	smux.HandleFunc("/alexa", alexa.Handler)
+
 	log.Println("STARTING: Alexa Handler")
 	log.Fatal(http.ListenAndServeTLS(":31415",
 		domainStr+".crt",
 		domainStr+".key",
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			w.Write([]byte("hello"))
-		}),
+		smux,
 	))
 }

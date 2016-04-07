@@ -113,10 +113,11 @@ func (d *Domain) Bootstrap() error {
 			log.Println("action: decoding certificate")
 			if cert, err := x509.ParseCertificate(certPem.Bytes); err == nil {
 				d.certificate = cert
-				log.Println("action: attempting certificate refresh")
-				if err := d.refreshCertificate(); err == nil {
-					return nil
-				}
+				return nil
+				// log.Println("action: attempting certificate refresh")
+				// if err := d.refreshCertificate(); err == nil {
+				// 	return nil
+				// }
 			}
 		}
 	}
