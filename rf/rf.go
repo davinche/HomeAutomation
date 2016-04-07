@@ -1,6 +1,7 @@
 package rf
 
 import (
+	"errors"
 	"fmt"
 	"homeautomation/apihelpers"
 	"net/http"
@@ -85,15 +86,8 @@ func SwitchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the code we want to transmit
-	selectedSwitch := switches[intSwitchNum]
-	code := selectedSwitch.On
-	if state == "off" {
-		code = selectedSwitch.Off
-	}
-
-	// Send the code
-	err = SendCode(code)
+	// Set the switch state
+	err = SetSwitch(intSwitchNum, state)
 
 	// Handle errors from pilight
 	if err != nil {
@@ -103,4 +97,19 @@ func SwitchHandler(w http.ResponseWriter, r *http.Request) {
 	// Success!
 	success := fmt.Sprintf("Successfully turned switch %d %s", intSwitchNum, state)
 	apihelpers.EncodeJSON(w, http.StatusOK, map[string]string{"message": success})
+}
+
+// SetSwitch sets a particular switch in the desired on/off state
+func SetSwitch(switchNum int, state string) error {
+	if switchNum > len(switches)-1 {
+		return errors.New("error: invalid switch number: " + strconv.Itoa(switchNum))
+	}
+	// Get the code we want to transmit
+	selectedSwitch := switches[switchNum]
+	code := selectedSwitch.On
+	if state == "off" {
+		code = selectedSwitch.Off
+	}
+	// Send the code
+	return SendCode(code)
 }
